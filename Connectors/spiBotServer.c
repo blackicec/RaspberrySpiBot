@@ -6,21 +6,10 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <sys/unistd.h>
+#include "./motorController.h"
 
 #define CONNECTION_PORT 1550
-#define MAX_COMMAND_SIZE 32
-
-/* Directional controls for the robot */
-#define LEFT_CTRL 4
-#define FORWARD_CTRL 8
-#define RIGHT_CTRL 6
-#define REVERSE_CTRL 2
-#define STOP_CTRL 5
-
-/* Voltage levels */
-#define VLT_LOW 0
-#define VLT_HIGH 1
-
+#define MAX_COMMAND_SIZE 8
 
 void controlHandler(int direction);
 
@@ -72,10 +61,4 @@ int main() {
 
     /* This return should never be reached */
     return 0;
-}
-
-void controlHandler(int direction) {
-    switch(direction) {
-
-    }
 }
