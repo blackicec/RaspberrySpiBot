@@ -14,7 +14,7 @@ SpiBotServer.exe: spiBotServer.o motorController.o
 	$(Compiler) $(CFlags) spiBotServer.o motorController.o $(ExecutableName)
 
 spiBotServer.o: spiBotServer.c
-	$(Compiler) $(CFlags) $(NoLinkFlag) spiBotServer.c
+	$(Compiler) $(CFlags) $(NoLinkFlag) -pthread spiBotServer.c
 
 motorController.o: motorController.c
 	$(Compiler) $(CFlags) $(NoLinkFlag) motorController.c
