@@ -13,10 +13,13 @@
 #define REVERSE_CTRL 2
 #define STOP_CTRL 5
 
-long 
+long movement_timer_limit = 1000;
 
 void forward_movement();
-
+void reverse_movement();
+void left_turn_movement();
+void right_turn_movement();
+void stop();
 void controlHandler(int direction);
 
 #endif
