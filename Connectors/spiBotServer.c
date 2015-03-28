@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <sys/unistd.h>
+#include <pthread.h>
 #include "./motorController.h"
 
 #define CONNECTION_PORT 1550
@@ -13,7 +14,7 @@
 
 void controlHandler(int direction);
 
-/* This will make sure that the robot is initially motionless*/
+/* This will make sure that the robot is initially motionless */
 int directionController = STOP_CTRL;
 
 int main() {
@@ -21,6 +22,9 @@ int main() {
     struct sockaddr_in serv_addr, client_addr;
     socklen_t client_addr_size;
     int socketfd, incomingfd, num_of_chars_read;
+    pthread_t motor_controller_thread,
+              instruction_manager_thread;
+
     
     /* Setup the socket descriptor */
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
