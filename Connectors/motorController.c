@@ -1,18 +1,31 @@
 #include "motorController.h"
+#include <stdio.h>
+#include <wiringPi.h>
 
-/*const int output_pin_left_for = 0; // pin 11 (left side)
-const int output_pin_right_for = 4; // pin 16 (right side)
-const int output_pin_left_rev = 2; // pin 13 (left side)
-const int output_pin_right_rev = 5; // pin 18 (right side)*/
-
-bool motor_pin_setup(const char* config_file_location) {
+int motor_pin_setup(const char* config_file_location) {
 	/* TODO: if config file exists, then use the specified . . . */
 
-	// setup all pins defined above to be in output mode
+    if(wiringPiSetup() == -1) {
+        printf("An error occured during the wiringPi setup.\n");
+        printf("Please be sure to have the WiringPi library installed.\n");
+        return -1;
+    }
+
+    const int output_pin_left_for = 0; /* pin 11 (left side) */
+    const int output_pin_right_for = 4; /* pin 16 (right side) */
+
+    
+    const int output_pin_left_rev = 2; /* pin 13 (left side) */
+    const int output_pin_right_rev = 5; /* pin 18 (right side) */
+
+
+	/* setup all pins defined above to be in output mode */
 	pinMode(output_pin_left_for, OUTPUT);
 	pinMode(output_pin_right_for, OUTPUT);
 	pinMode(output_pin_left_rev, OUTPUT);
 	pinMode(output_pin_right_rev, OUTPUT);
+
+    return 0;
 }
 
 void forward_movement() {
@@ -87,7 +100,7 @@ void instruction_handler(int direction) {
 			stop();
 			reverse_movement();
 			break;
-		default: // We can either ignore the instruction all together or force the vehicle to come to a full stop (maybe put this in config file as option)
+		default: /* We could either stop the vehicle or ignore the command. Refer to config file */
 			stop();
 			break;
 	}

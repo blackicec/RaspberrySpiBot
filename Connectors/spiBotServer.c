@@ -24,7 +24,7 @@ int directionController = STOP_CTRL;
 */
 int socket_status = 0;
 
-struct instruction {
+typedef struct instruction {
     int instruction_code;
     time_t last_modified;
 } instruction;
@@ -35,6 +35,7 @@ int main() {
     int thread_creation_status;
     pthread_t instruction_manager_thread,
         motor_controller_thread;
+    pthread_attr_t attr;
 
     /* Initialize our motor instructions structure */
     motor_instruction.instruction_code = STOP_CTRL;
@@ -44,17 +45,23 @@ int main() {
     char configuration_file_location[1];
     motor_pin_setup(configuration_file_location);
 
+    thread_creation_status = pthread_attr_init(&attr);
+    if(thread_creation_status != 0) {
+        printf("Creation of the thread attr failed.\n");
+        return -1;
+    }
+
     /* Fire up our thread so they can get to work */
-    thread_creation_status = p_thread_create(&instruction_manager_thread,
-        NULL, &instruction_manager_handler);
+    thread_creation_status = pthread_create(&instruction_manager_thread,
+        NULL, instruction_manager_handler, NULL);
 
     if(thread_creation_status != 0) {
         printf("An error occurred while creating the Instruction Manager thread.\n");
-        return;
+        return -1;
     }
 
-    thread_creation_status = p_thread_create(&motor_controller_thread,
-        NULL, &motor_control_handler);
+    thread_creation_status = pthread_create(&motor_controller_thread,
+        NULL, motor_control_handler, NULL);
 
     if(thread_creation_status != 0) {
         printf("An error occurred while creating the Motor Controller thread.\n");
@@ -63,7 +70,7 @@ int main() {
         * Since the Instruction Manager thread was created successfully
         * at this point, we need to clean it up before ending this execution.
         */
-        pthread_exit(&instruction_manager_thread)
+        pthread_exit(&instruction_manager_thread);
         return;
     }
 
@@ -71,7 +78,7 @@ int main() {
     return 0;
 }
 
-void instruction_manager_handler() {
+void instruction_manager_handler( void* arg ) {
     char buffer[MAX_COMMAND_SIZE];
     struct sockaddr_in serv_addr, client_addr;
     socklen_t client_addr_size;
@@ -131,11 +138,13 @@ void instruction_manager_handler() {
         }
 }
 
-void motor_control_handler() {
+void motor_control_handler( void* arg ) {
     printf("Thread Motor Controller has started successfully.\n");
 
     /* Give the controller its first instruction . . . make sure it's stopped */
-    int current_instruction = STOP_CTRL;
+    int current_instruction;
+
+    current_instruction = STOP_CTRL;
     instruction_handler(current_instruction);
 
     while( 1 ) {
@@ -145,6 +154,7 @@ void motor_control_handler() {
             
             instruction_handler(motor_instruction.instruction_code);
             current_instruction = motor_instruction.instruction_code;
+            printf("New instruction recieved: %i", motor_instruction.instruction_code);
         }
     }
 }

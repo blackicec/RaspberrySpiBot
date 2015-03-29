@@ -18,17 +18,17 @@
 * To make this work, simply set these two outputs to HIGH and set
 * the rev outputs to LOW
 */
-const int output_pin_left_for = 0; // pin 11 (left side)
-const int output_pin_right_for = 4; // pin 16 (right side)
+extern const int output_pin_left_for; /* pin 11 (left side) */
+extern const int output_pin_right_for; /* pin 16 (right side) */
 
 /*
 * Setting these two pins to HIGH while the forward pins are
 * set to LOW, will make the RC car move in the reverse direction.
 */
-const int output_pin_left_rev = 2; // pin 13 (left side)
-const int output_pin_right_rev = 5; // pin 18 (right side) 
+extern const int output_pin_left_rev; /* pin 13 (left side) */
+extern const int output_pin_right_rev; /* pin 18 (right side) */
 
-bool motor_pin_setup(const char* config_file_location);
+int motor_pin_setup(const char* config_file_location);
 void forward_movement();
 void reverse_movement();
 void left_turn_movement();
