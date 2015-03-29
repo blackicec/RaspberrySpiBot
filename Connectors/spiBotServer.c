@@ -53,7 +53,7 @@ int main() {
 
     /* Fire up our thread so they can get to work */
     thread_creation_status = pthread_create(&instruction_manager_thread,
-        NULL, instruction_manager_handler, NULL);
+        NULL, (void*)instruction_manager_handler, NULL);
 
     if(thread_creation_status != 0) {
         printf("An error occurred while creating the Instruction Manager thread.\n");
@@ -61,7 +61,7 @@ int main() {
     }
 
     thread_creation_status = pthread_create(&motor_controller_thread,
-        NULL, motor_control_handler, NULL);
+        NULL, (void*)motor_control_handler, NULL);
 
     if(thread_creation_status != 0) {
         printf("An error occurred while creating the Motor Controller thread.\n");
@@ -71,7 +71,7 @@ int main() {
         * at this point, we need to clean it up before ending this execution.
         */
         pthread_exit(&instruction_manager_thread);
-        return;
+        return -1;
     }
 
     /* This return should never be reached */
@@ -132,9 +132,10 @@ void instruction_manager_handler( void* arg ) {
 
             printf("Message of Size %d Recieved: %s\n", num_of_chars_read, buffer);
 
-            // TODO: take message, parse it, then set the new value so the other
+            /* TODO: take message, parse it, then set the new value so the other
             // thread can consume it. If the message is the same as the previous, then
             // r
+            */
         }
 }
 
