@@ -74,7 +74,11 @@ int main() {
         return -1;
     }
 
+    pthread_join(instruction_manager_thread, NULL);
+    pthread_join(motor_controller_thread, NULL);
+
     /* This return should never be reached */
+    printf("Execution Complete.\n");
     return 0;
 }
 
