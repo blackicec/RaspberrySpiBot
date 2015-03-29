@@ -34,6 +34,6 @@ void reverse_movement();
 void left_turn_movement();
 void right_turn_movement();
 void stop();
-void controlHandler(int direction);
+void instruction_handler(int direction);
 
 #endif

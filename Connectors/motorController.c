@@ -69,7 +69,7 @@ void stop() {
 	digitalWrite(output_pin_right_rev, VLT_LOW);
 }
 
-void controlHandler(int direction) {
+void instruction_handler(int direction) {
 	switch(direction) {
 		case LEFT_CTRL:
 			stop();
