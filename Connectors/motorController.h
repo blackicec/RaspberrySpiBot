@@ -13,8 +13,22 @@
 #define REVERSE_CTRL 2
 #define STOP_CTRL 5
 
-long movement_timer_limit = 1000;
+/*
+* The following two pins are used to move the RC car forward.
+* To make this work, simply set these two outputs to HIGH and set
+* the rev outputs to LOW
+*/
+const int output_pin_left_for = 0; // pin 11 (left side)
+const int output_pin_right_for = 4; // pin 16 (right side)
 
+/*
+* Setting these two pins to HIGH while the forward pins are
+* set to LOW, will make the RC car move in the reverse direction.
+*/
+const int output_pin_left_rev = 2; // pin 13 (left side)
+const int output_pin_right_rev = 5; // pin 18 (right side) 
+
+bool motor_pin_setup(const char* config_file_location);
 void forward_movement();
 void reverse_movement();
 void left_turn_movement();
@@ -23,47 +37,3 @@ void stop();
 void controlHandler(int direction);
 
 #endif
-
-
-
-int new_direction (local) = STOP_CTRL;
-int currentDirection (global) = -1;
-// stop() stop the vehicle
-###thread_1 - will read the data 
-while(1) {
-	direction = read(. . .)
-	
-	if( read[failed] ) {
-		direction = currentDirection;
-		continue;
-	}
-	
-	if(direction != currentDirection) {
-		currentDirection = direction;
-	}
-}
-
-##thread_2
-function() {
-	
-	while(1) {
-		if(new_direction != currentDirection) {
-			direction_change(new_direction);
-		}
-	}
-}
-
-void direction_change(const int new_direction) {
-	switch(direction) {
-		case LEFT_CTRL:
-			break;
-		case RIGHT_CTRL:
-			break;
-		case FORWARD_CTRL:
-			break;
-		case REVERSE_CTRL:
-			break;
-		default: // We can either ignore the instruction all together or force the vehicle to come to a full stop (maybe put this in config file as option)
-			break;
-	}
-}
