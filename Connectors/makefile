@@ -17,7 +17,7 @@ spiBotServer.o: spiBotServer.c
 	$(Compiler) $(CFlags) $(NoLinkFlag) -pthread spiBotServer.c
 
 motorController.o: motorController.c
-	$(Compiler) $(CFlags) $(NoLinkFlag) motorController.c
+	$(Compiler) $(CFlags) $(NoLinkFlag) -lwiringPi motorController.c
 
 clean:
 	rm -rf SpiBotServer.exe *.o
