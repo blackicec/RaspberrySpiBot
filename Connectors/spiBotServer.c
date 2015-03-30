@@ -32,6 +32,11 @@ typedef struct instruction {
 instruction motor_instruction;
 
 int main() {
+    const char* forward_command = "forward";
+    const char* reverse_command = "reverse";
+    const char* turn_left_command = "turn_left";
+    const char* turn_right_command = "turn_right";
+
     int thread_creation_status;
     pthread_t instruction_manager_thread,
         motor_controller_thread;
@@ -93,7 +98,7 @@ void instruction_manager_handler( void* arg ) {
 
     client_addr_size = sizeof(client_addr);
 
-    /* Initialize our address structures */
+    /* Initialize our server and client address structures */
     memset((char*)&serv_addr, 0, sizeof(serv_addr));
     memset((char*)&client_addr, 0, client_addr_size);
     memset(buffer, 0, MAX_COMMAND_SIZE);
@@ -107,12 +112,12 @@ void instruction_manager_handler( void* arg ) {
         printf("Failed to bind to socket: %i\n", CONNECTION_PORT);
     }
     else {
-        /* TODO: Send data like this to a log file and not to stdout*/
+        /* TODO: Send data like this to a log file and not to stdout */
         printf("The socket has been bound on port: %i\n", CONNECTION_PORT);
     }
 
     ListenForConnection:
-        socket_status = listen(socketfd, 1); /* TODO: use macro for backlog param */
+        socket_status = listen(socketfd, 1); 
 
         if(socket_status != 0) {
             printf("Failed to listen on port: %i\n", CONNECTION_PORT);
@@ -136,10 +141,33 @@ void instruction_manager_handler( void* arg ) {
 
             printf("Message of Size %d Recieved: %s\n", num_of_chars_read, buffer);
 
-            /* TODO: take message, parse it, then set the new value so the other
-            // thread can consume it. If the message is the same as the previous, then
-            // r
+            /*
+            * Set the global motor_instruction structure so motor_controller
+            * thread can handle it accordingly. If the instruction is the same
+            * as the previous, the motor_controller will just ignore it.
             */
+            if(strcmp(buffer, forward_command) == 0) {
+                motor_instruction.instruction_code = FORWARD_CTRL;
+                motor_instruction.last_modified = time(NULL);
+            } else if(strcmp(buffer, reverse_command) == 0) {
+                motor_instruction.instruction_code = REVERSE_CTRL;
+                motor_instruction.last_modified = time(NULL);
+            } else if(strcmp(buffer, turn_left_command) == 0) {
+                motor_instruction.instruction_code = LEFT_CTRL;
+                motor_instruction.last_modified = time(NULL);
+            } else if(strcmp(buffer, turn_right_command) == 0) {
+                motor_instruction.instruction_code = RIGHT_CTRL;
+                motor_instruction.last_modified = time(NULL);
+            } else {
+                motor_instruction.instruction_code = STOP_CTRL;
+                motor_instruction.last_modified = time(NULL);
+            }
+
+            printf("Instruction modified at: %li seconds",
+                motor_instruction.last_modified);
+
+            /* Clean out the buffer */
+            memset(buffer, 0, MAX_COMMAND_SIZE);
         }
 }
 
@@ -159,7 +187,12 @@ void motor_control_handler( void* arg ) {
             
             instruction_handler(motor_instruction.instruction_code);
             current_instruction = motor_instruction.instruction_code;
-            printf("New instruction recieved: %i", motor_instruction.instruction_code);
+
+            printf("New instruction has been recieved and handled: %i\n",
+                motor_instruction.instruction_code);
+
+            /* Allow this thread to take a little break before checking again */
+            sleep(1); /* This may be too long of a sleep, but its worth a try */
         }
     }
 }
