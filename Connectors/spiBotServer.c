@@ -12,8 +12,8 @@
 #define CONNECTION_PORT 1550
 #define MAX_COMMAND_SIZE 8
 
-void instruction_manager_handler();
-void motor_control_handler();
+void* instruction_manager_handler();
+void* motor_control_handler();
 
 const char* forward_command = "forward";
 const char* reverse_command = "reverse";
@@ -37,25 +37,21 @@ int main() {
     int thread_creation_status;
     pthread_t instruction_manager_thread,
         motor_controller_thread;
-    pthread_attr_t attr;
+
+    /* Setup our GPIO pin configuration */
+    char* configuration_file_location;
+
+    configuration_file_location = "*"; /* This will eventually ba a real file */
 
     /* Initialize our motor instructions structure */
     motor_instruction.instruction_code = STOP_CTRL;
     motor_instruction.last_modified = time(NULL);
 
-    /* Setup our GPIO pin configuration */
-    char configuration_file_location[1];
     motor_pin_setup(configuration_file_location);
-
-    thread_creation_status = pthread_attr_init(&attr);
-    if(thread_creation_status != 0) {
-        printf("Creation of the thread attr failed.\n");
-        return -1;
-    }
 
     /* Fire up our thread so they can get to work */
     thread_creation_status = pthread_create(&instruction_manager_thread,
-        NULL, (void*)instruction_manager_handler, NULL);
+        NULL, &instruction_manager_handler, NULL);
 
     if(thread_creation_status != 0) {
         printf("An error occurred while creating the Instruction Manager thread.\n");
@@ -63,7 +59,7 @@ int main() {
     }
 
     thread_creation_status = pthread_create(&motor_controller_thread,
-        NULL, (void*)motor_control_handler, NULL);
+        NULL, &motor_control_handler, NULL);
 
     if(thread_creation_status != 0) {
         printf("An error occurred while creating the Motor Controller thread.\n");
@@ -84,12 +80,14 @@ int main() {
     return 0;
 }
 
-void instruction_manager_handler( void* arg ) {
+void* instruction_manager_handler( void* arg ) {
     char buffer[MAX_COMMAND_SIZE];
     struct sockaddr_in serv_addr, client_addr;
     socklen_t client_addr_size;
     int socketfd, incomingfd, num_of_chars_read;
         
+    printf("Instruction Manager has started successfully.\n");
+    
     /* Setup the socket descriptor */
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -118,7 +116,7 @@ void instruction_manager_handler( void* arg ) {
 
         if(socket_status != 0) {
             printf("Failed to listen on port: %i\n", CONNECTION_PORT);
-            return;
+            return arg; /* For lack of anything better to return right now */
         }
 
         while( 1 ) {
@@ -160,7 +158,7 @@ void instruction_manager_handler( void* arg ) {
                 motor_instruction.last_modified = time(NULL);
             }
 
-            printf("Instruction modified at: %li seconds",
+            printf("Instruction modified at: %li seconds.\n",
                 motor_instruction.last_modified);
 
             /* Clean out the buffer */
@@ -168,9 +166,7 @@ void instruction_manager_handler( void* arg ) {
         }
 }
 
-void motor_control_handler( void* arg ) {
-    printf("Thread Motor Controller has started successfully.\n");
-
+void* motor_control_handler( void* arg ) {
     /* 
     * Give the controller its first instruction . . . make sure it's stopped.
     * This will make sure that the robot is initially motionless.
@@ -179,6 +175,8 @@ void motor_control_handler( void* arg ) {
 
     current_instruction = STOP_CTRL;
     instruction_handler(current_instruction);
+    
+    printf("Thread Motor Controller has started successfully.\n");
 
     while( 1 ) {
 
