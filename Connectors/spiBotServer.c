@@ -15,8 +15,10 @@
 void instruction_manager_handler();
 void motor_control_handler();
 
-/* This will make sure that the robot is initially motionless */
-int directionController = STOP_CTRL;
+const char* forward_command = "forward";
+const char* reverse_command = "reverse";
+const char* turn_left_command = "turn_left";
+const char* turn_right_command = "turn_right";
 
 /* 
 * If our socket status is anything other than 0, then our two threads will 
@@ -32,11 +34,6 @@ typedef struct instruction {
 instruction motor_instruction;
 
 int main() {
-    const char* forward_command = "forward";
-    const char* reverse_command = "reverse";
-    const char* turn_left_command = "turn_left";
-    const char* turn_right_command = "turn_right";
-
     int thread_creation_status;
     pthread_t instruction_manager_thread,
         motor_controller_thread;
@@ -174,7 +171,10 @@ void instruction_manager_handler( void* arg ) {
 void motor_control_handler( void* arg ) {
     printf("Thread Motor Controller has started successfully.\n");
 
-    /* Give the controller its first instruction . . . make sure it's stopped */
+    /* 
+    * Give the controller its first instruction . . . make sure it's stopped.
+    * This will make sure that the robot is initially motionless.
+    */
     int current_instruction;
 
     current_instruction = STOP_CTRL;
