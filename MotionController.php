@@ -21,14 +21,15 @@
     echo "Attempting to connect to '$address' on port '$service_port'...";
     $result = socket_connect($socket, $address, $service_port);
     if ($result === false) {
-            echo "socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+            echo "socket_connect() failed.\nReason: ($result) " . 
+                socket_strerror(socket_last_error($socket)) . "\n";
     } else {
             echo "OK.<br>";
     }
     
     $data = $_GET['data'];
 
-    echo 'Sending data to server now . . . <br>';
+    echo 'Sending command to server now . . . ';
     socket_write($socket, $data, strlen($data));
     echo "OK.<br>";
 
@@ -42,19 +43,11 @@
 
 	}
 
-	function SoftTurnLeft() {
+	function TurnLeft() {
 
 	}
 
-	function SoftTurnRight() {
-
-	}
-
-	function HardTurnLeft() {
-
-	}
-
-	function HardTurnRight() {
+	function TurnRight() {
 
 	}
 ?>

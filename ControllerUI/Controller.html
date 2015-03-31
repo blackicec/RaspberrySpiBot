@@ -1,0 +1,46 @@
+<html>
+	<head>
+		<title>Whose's Driving This Rig???</title>
+		<script type="text/javascript" src="./dependencies/scripts/jquery-2.1.3.min.js">
+		</script>
+
+		<script type="text/javascript">
+			function invoke_get_method( URL ) {
+				$.get( URL, function( data ) {
+				  $( ".result" ).html( data );
+				});
+			}
+			function forward() {
+				invoke_get_method("../MotionController.php?data=forward");
+			}
+			function reverse() {
+				invoke_get_method("../MotionController.php?data=reverse");
+			}
+			function stop() {
+				invoke_get_method("../MotionController.php?data=stop");
+			}
+		</script>
+	</head>
+
+	<body>
+		<div>
+			<div style="height:400px; width:400px; margin: auto auto auto auto; background-color:black">
+				<div style="height:75px; width:75px; margin: auto auto auto auto;">
+					<button onclick="forward()" style="height:75px; width:75px; background-image:url(./dependencies/images/forward_arrow_image.svg); background-repeat:no-repeat; background-position: center; "/>
+				</div>
+				<div style="height:75px; width:150px; margin: auto auto auto auto;">
+					<button style="height:75px; width:75px; background-image:url(./dependencies/images/turn_left_arrow_image.svg); background-repeat:no-repeat; background-position: center;"/>
+					<button style="height:75px; width:75px; background-image:url(./dependencies/images/turn_right_arrow_image.svg); background-repeat:no-repeat; background-position: center; "/>
+				</div>
+				<div style="height:75px; width:75px; margin: auto auto auto auto;">
+					<button onclick="reverse()" style="height:75px; width:75px; background-image:url(./dependencies/images/reverse_arrow_image.svg); background-repeat:no-repeat; background-position: center; "/>
+				</div>
+				<div style="padding-top:10px; height:75px; width:75px; margin: auto auto auto auto;">
+					<button onclick="stop()" style="height:75px; width:75px;background-image:url(./dependencies/images/stop_sign_image.svg); background-repeat:no-repeat; background-position: center; "/>
+				</div>
+			</div>
+			<div id="result"></div>
+		</div>
+	</body>
+
+</html>
