@@ -166,4 +166,3 @@ Protocol Descriptor List:
   "L2CAP" (0x0100)
   "RFCOMM" (0x0003)
     Channel: 5
-
