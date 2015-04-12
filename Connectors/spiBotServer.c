@@ -10,7 +10,7 @@
 #include "./motorController.h"
 
 #define CONNECTION_PORT 1550
-#define MAX_COMMAND_SIZE 8
+#define MAX_COMMAND_SIZE 10
 
 void* instruction_manager_handler();
 void* motor_control_handler();
