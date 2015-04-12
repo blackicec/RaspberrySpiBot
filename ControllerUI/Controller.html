@@ -16,6 +16,12 @@
 			function reverse() {
 				invoke_get_method("../MotionController.php?data=reverse");
 			}
+			function left() {
+				invoke_get_method("../MotionController.php?data=turn_left");
+			}
+			function right() {
+				invoke_get_method("../MotionController.php?data=turn_right");
+			}
 			function stop() {
 				invoke_get_method("../MotionController.php?data=stop");
 			}
@@ -29,8 +35,8 @@
 					<button onclick="forward()" style="height:75px; width:75px; background-image:url(./dependencies/images/forward_arrow_image.svg); background-repeat:no-repeat; background-position: center; "/>
 				</div>
 				<div style="height:75px; width:150px; margin: auto auto auto auto;">
-					<button style="height:75px; width:75px; background-image:url(./dependencies/images/turn_left_arrow_image.svg); background-repeat:no-repeat; background-position: center;"/>
-					<button style="height:75px; width:75px; background-image:url(./dependencies/images/turn_right_arrow_image.svg); background-repeat:no-repeat; background-position: center; "/>
+					<button onclick="left()" style="height:75px; width:75px; background-image:url(./dependencies/images/turn_left_arrow_image.svg); background-repeat:no-repeat; background-position: center;"/>
+					<button onclick="right()" style="height:75px; width:75px; background-image:url(./dependencies/images/turn_right_arrow_image.svg); background-repeat:no-repeat; background-position: center; "/>
 				</div>
 				<div style="height:75px; width:75px; margin: auto auto auto auto;">
 					<button onclick="reverse()" style="height:75px; width:75px; background-image:url(./dependencies/images/reverse_arrow_image.svg); background-repeat:no-repeat; background-position: center; "/>
