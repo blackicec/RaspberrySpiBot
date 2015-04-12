@@ -190,7 +190,7 @@ void* motor_control_handler( void* arg ) {
                 motor_instruction.instruction_code);
 
             /* Allow this thread to take a little break before checking again */
-            sleep(1); /* This may be too long of a sleep, but its worth a try */
+            /*sleep(1);  This may be too long of a sleep, but its worth a try */
         }
     }
 }
