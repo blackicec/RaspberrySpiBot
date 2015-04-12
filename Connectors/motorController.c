@@ -21,8 +21,9 @@ int motor_pin_setup(const char* config_file_location) {
 	/* TODO: if config file exists, then use the specified . . . */
 
     if(wiringPiSetup() == -1) {
-        printf("An error occured during the wiringPi setup.\n");
-        printf("Please be sure to have the WiringPi library installed.\n");
+    	/*TODO: Removing. Log this data to a log file and not to stdout*/
+        /*printf("An error occured during the wiringPi setup.\n");
+        printf("Please be sure to have the WiringPi library installed.\n");*/
         return -1;
     }
 
