@@ -25,6 +25,40 @@
 			function stop() {
 				invoke_get_method("../MotionController.php?data=stop");
 			}
+			
+			// Up Arrow: 38
+			// Down Arrow: 40
+			// Left Arrow: 37
+			// Right Arrow: 39
+			function keyDownEvent(e) {
+				var keyCode = e.keyCode;
+				switch(keyCode) {
+					case 38: forward();
+						break;
+					case 40: reverse();
+						break;
+					case 37: left();
+						break;
+					case 39: right();
+						break;
+					default: stop();
+						break;
+				}
+			}
+
+			function keyUpEvent(e) {
+				var keyCode = e.keyCode;
+				switch(keyCode) {
+					case 38:
+					case 40:
+					case 37:
+					case 39: stop();
+						break;
+				}
+			}
+
+			document.addEventListener("keydown", keyDownEvent, false);
+			document.addEventListener("keyup", keyUpEvent, false);
 		</script>
 	</head>
 
