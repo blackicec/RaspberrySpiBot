@@ -14,11 +14,15 @@
 
 void* instruction_manager_handler();
 void* motor_control_handler();
+void log_writer(char* log_level, char* log_message);
 
 const char* forward_command = "forward";
 const char* reverse_command = "reverse";
 const char* turn_left_command = "turn_left";
 const char* turn_right_command = "turn_right";
+
+char* log_file = "./log_file.txt";
+char message[256];
 
 /* 
 * If our socket status is anything other than 0, then our two threads will 
@@ -26,12 +30,15 @@ const char* turn_right_command = "turn_right";
 */
 int socket_status = 0;
 
+pthread_cond_t cond_instruction_received;
+
 typedef struct instruction {
     int instruction_code;
     time_t last_modified;
 } instruction;
 
 instruction motor_instruction;
+pthread_mutex_t mutex;
 
 int main() {
     int thread_creation_status;
@@ -42,6 +49,10 @@ int main() {
     char* configuration_file_location;
 
     configuration_file_location = "*"; /* This will eventually ba a real file */
+
+    /* Setup our mutex lock for instruction handling */
+    pthread_mutex_init(&mutex, NULL);
+    pthread_cond_init (&cond_instruction_received, NULL);
 
     /* Initialize our motor instructions structure */
     motor_instruction.instruction_code = STOP_CTRL;
@@ -75,6 +86,8 @@ int main() {
     pthread_join(instruction_manager_thread, NULL);
     pthread_join(motor_controller_thread, NULL);
 
+    pthread_mutex_destroy(&mutex);
+
     /* This return should never be reached */
     /*printf("Execution Complete.\n");*/
     return 0;
@@ -84,10 +97,8 @@ void* instruction_manager_handler( void* arg ) {
     char buffer[MAX_COMMAND_SIZE];
     struct sockaddr_in serv_addr, client_addr;
     socklen_t client_addr_size;
-    int socketfd, incomingfd, num_of_chars_read;
+    int socketfd, incomingfd;
         
-    /*printf("Instruction Manager has started successfully.\n");*/
-    
     /* Setup the socket descriptor */
     socketfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -104,11 +115,12 @@ void* instruction_manager_handler( void* arg ) {
    
     /* Attempt to bind the socket to the socket descriptor */
     if ( bind(socketfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-        /*printf("Failed to bind to socket: %i\n", CONNECTION_PORT);*/
+	sprintf(message, "Failed to bind to socket: %i\n", CONNECTION_PORT);
+	log_writer("ERROR", message);
     }
     else {
-        /* TODO: Send data like this to a log file and not to stdout */
-        /*printf("The socket has been bound on port: %i\n", CONNECTION_PORT);*/
+	sprintf(message, "The socket has been bound on port: %i\n", CONNECTION_PORT);
+	log_writer("DEBUG", message);
     }
 
     ListenForConnection:
@@ -120,6 +132,8 @@ void* instruction_manager_handler( void* arg ) {
         }
 
         while( 1 ) {
+
+
             incomingfd = accept(socketfd, (struct sockaddr*)&client_addr, 
                     &client_addr_size);
 
@@ -128,14 +142,14 @@ void* instruction_manager_handler( void* arg ) {
             * and check our socket connection status.
             */
             if( incomingfd < 0 ) {
-               /*printf("Failed to accept incoming socket communication.\n");*/
+               log_writer("ERROR", "Failed to accept incoming socket communication. . . . retrying.\n");
                goto ListenForConnection;
             }
 
-            num_of_chars_read = read( incomingfd, buffer, MAX_COMMAND_SIZE);
+            read(incomingfd, buffer, MAX_COMMAND_SIZE);
 
-            /*printf("Message of Size %d Recieved: %s\n", num_of_chars_read, buffer);*/
-
+            pthread_mutex_lock(&mutex);
+            log_writer("DEBUG", "Instruction Manager Handler - Obtained mutex lock.\n");
             /*
             * Set the global motor_instruction structure so motor_controller
             * thread can handle it accordingly. If the instruction is the same
@@ -158,11 +172,15 @@ void* instruction_manager_handler( void* arg ) {
                 motor_instruction.last_modified = time(NULL);
             }
 
-            /*printf("Instruction modified at: %li seconds.\n",
-                motor_instruction.last_modified);*/
+            /* give control to the motor_controller thread */
+            log_writer("DEBUG", "Instruction Manager Handler - Passing mutex to Motor Controller.\n");
+            pthread_cond_signal(&cond_instruction_received);
+            pthread_mutex_unlock(&mutex);
 
-            /* Clean out the buffer */
+            /* clean out the buffer */
             memset(buffer, 0, MAX_COMMAND_SIZE);
+            
+            log_writer("DEBUG", "Instruction Manager Handler - Waiting for mutex lock.\n");
         }
 }
 
@@ -176,21 +194,48 @@ void* motor_control_handler( void* arg ) {
     current_instruction = STOP_CTRL;
     instruction_handler(current_instruction);
     
-    /*printf("Thread Motor Controller has started successfully.\n");*/
+    log_writer("DEBUG", "Thread Motor Controller has started successfully.\n");
 
+    pthread_mutex_lock(&mutex);
     while( 1 ) {
 
-        if(motor_instruction.last_modified + 1 >= time(NULL) 
-            && motor_instruction.instruction_code != current_instruction) {
+	log_writer("DEBUG", "Motor Control Handler - Waiting . . .\n");
+        pthread_cond_wait(&cond_instruction_received, &mutex);
+
+	log_writer("DEBUG", "Motor Control Handler - Mutex lock revieved . . . handling request.\n");
+
+	printf("Instruction processing");
+	log_writer("DEBUG", "Instruction processing");
+
+        if(motor_instruction.instruction_code != current_instruction) {
             
             instruction_handler(motor_instruction.instruction_code);
             current_instruction = motor_instruction.instruction_code;
 
-            /*printf("New instruction has been recieved and handled: %i\n",
-                motor_instruction.instruction_code);*/
+           log_writer("DEBUG","New instruction has been recieved and handled");
 
-            /* Allow this thread to take a little break before checking again */
-            /*sleep(1);  This may be too long of a sleep, but its worth a try */
+           /* reset the instruction code */
+           motor_instruction.instruction_code = -1;
+           pthread_mutex_unlock(&mutex);
         }
     }
+}
+
+/* write out to a log message to the specified log file location (config file?) */
+void log_writer(char* log_level, char* log_message) { 
+/*inside of some loop, this was called a ton of time and failed each time.*/
+    time_t rawtime;
+    FILE* file;
+
+    rawtime = time(NULL);
+    file = fopen(log_file, "a"); /* open the file so we can append to it */
+    
+    if (file == NULL) {
+        printf("Error opening file");
+        return;
+    }
+
+    fprintf(file, "(%s) %s: %s\n", asctime(localtime(&rawtime)), log_level, log_message);
+
+    fclose(file);
 }
