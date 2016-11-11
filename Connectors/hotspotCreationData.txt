@@ -1,0 +1,106 @@
+if [ -e /usr/share/nginx/www/RaspberrySpiBot/Connectors/SpiBotServer.exe ]; then
+        sudo /usr/share/nginx/www/RaspberrySpiBot/Connectors/SpiBotServer.exe &
+fi
+
+
+===================================================
+
+**************** /etc/udhcpd.conf ****************
+start 192.168.42.2 # This is the range of IPs that the hostspot will give to client devices.
+end 192.168.42.20
+interface wlan0 # The device uDHCP listens on.
+remaining yes
+opt dns 8.8.8.8 4.2.2.2 # The DNS servers client devices will use.
+opt subnet 255.255.255.0
+opt router 192.168.42.1 # The Pi's IP address on wlan0 which we will set up shortly.
+opt lease 864000 # 10 day DHCP lease time in seconds
+
+***************** /etc/default/udhcpd ****************
+# Comment the following line to enable
+#DHCPD_ENABLED="no"
+
+# Options to pass to busybox' udhcpd.
+#
+# -S    Log to syslog
+# -f    run in foreground
+
+DHCPD_OPTS="-S"
+
+******** CMD: sudo ifconfig wlan0 192.168.42.1 ***********
+
+***************** /etc/network/interfaces ******************
+auto lo
+
+iface lo inet loopback
+iface eth0 inet dhcp
+
+#allow-hotplug wlan0
+#iface wlan0 inet manual
+#wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
+#iface default inet dhcp
+
+iface wlan0 inet static
+  address 192.168.42.1
+  netmask 255.255.255.0
+
+up iptables-restore < /etc/iptables.ipv4.nat
+
+
+***************** /etc/hostapd/hostapd.conf ***************
+interface=wlan0
+driver=nl80211
+ssid=RaspberryPiBot
+hw_mode=g
+channel=2
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=spibot
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+
+********************* /etc/default/hostapd *********************
+# Defaults for hostapd initscript
+#
+# See /usr/share/doc/hostapd/README.Debian for information about alternative
+# methods of managing hostapd.
+#
+# Uncomment and set DAEMON_CONF to the absolute path of a hostapd configuration
+# file and hostapd will be started during system boot. An example configuration
+# file can be found at /usr/share/doc/hostapd/examples/hostapd.conf.gz
+#
+DAEMON_CONF="/etc/hostapd/hostapd.conf"
+
+# Additional daemon options to be appended to hostapd command:-
+#       -d   show more debug messages (-dd for even more)
+#       -K   include key data in debug messages
+#       -t   include timestamps in some debug messages
+#
+# Note that -B (daemon mode) and -P (pidfile) options are automatically
+# configured by the init.d script and must not be added to DAEMON_OPTS.
+#     
+#DAEMON_OPTS=""
+
+
+***************** /etc/sysctl.conf ** Add to bottom of file ***********
+
+net.ipv4.ip_forward=1
+
+
+************* RUN EM ****************
+sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+sudo iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+
+sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+
+sudo service hostapd start
+sudo service udhcpd start
+
+sudo update-rc.d hostapd enable
+sudo update-rc.d udhcpd enable
+
+run program on startup
+-  add conditional with executable to /etc/rc.local
